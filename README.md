@@ -1,1 +1,0 @@
-# Healthscreening-UI-for-VP-page-Part-2
