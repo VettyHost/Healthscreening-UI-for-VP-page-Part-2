@@ -57,15 +57,25 @@
                     </div>
                 </div>
                 
-                <!-- NEW DROPDOWN: Health Screening Actions -->
-                <div class="relative mt-2">
-                    <button id="actionMenuBtn" onclick="toggleActionMenu()" class="text-primary font-semibold hover:text-blue-800 text-xs sm:text-sm tracking-wide focus:outline-none flex items-center gap-1.5 transition-colors">
-                        Health Screening Actions <i class="fas fa-chevron-down text-[10px]"></i>
-                    </button>
-                    <div id="actionDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-50 py-1">
-                        <button onclick="openModifyOrderFlow(); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Modify Order</button>
-                        <button onclick="openDurationModal(); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Modify Pass Duration</button>
-                        <button onclick="openAvailabilityModal('All Health Screening Checks'); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Change Location for All</button>
+                <!-- NEW DROPDOWN: Health Screening Actions with Tooltip -->
+                <div class="relative mt-2 flex items-center justify-end gap-1.5">
+                    <div class="group relative flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 cursor-pointer text-sm"></i>
+                        <div class="absolute bottom-full right-[-10px] mb-2 hidden group-hover:block w-56 bg-slate-800 text-white text-xs rounded shadow-xl p-3 z-[100] text-left font-normal leading-relaxed cursor-default">
+                            We can modify order, modify pass duration, and change location for all using Health Screening Actions.
+                            <div class="absolute top-full right-3 border-4 border-transparent border-t-slate-800"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="relative">
+                        <button id="actionMenuBtn" onclick="toggleActionMenu()" class="text-primary font-semibold hover:text-blue-800 text-xs sm:text-sm tracking-wide focus:outline-none flex items-center gap-1.5 transition-colors">
+                            Health Screening Actions <i class="fas fa-chevron-down text-[10px]"></i>
+                        </button>
+                        <div id="actionDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-50 py-1">
+                            <button onclick="openModifyOrderFlow(); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Modify Order</button>
+                            <button onclick="openDurationModal(); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Modify Pass Duration</button>
+                            <button onclick="openAvailabilityModal('All Health Screening Checks'); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Change Location for All</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -174,7 +184,7 @@
                 </div>
             </div>
 
-            <!-- CONFIRMED STATE -->
+            <!-- CONFIRMED STATE PASS 1 -->
             <div id="confirmedOrderDetails" class="border border-slate-200 rounded-lg overflow-hidden hidden bg-white">
                 <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 font-semibold text-sm text-slate-800">
                     Vaccine, Drug, Basic Physical, Titers Order Details
@@ -223,6 +233,56 @@
 
                     <!-- Download Button -->
                     <button onclick="downloadExistingPass()" class="w-full bg-[#0d6efd] text-white font-bold text-sm sm:text-base py-3.5 rounded hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mt-2 uppercase">
+                        Download Donor Pass / ePassport <i class="far fa-file-pdf"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- CONFIRMED STATE PASS 2 (Used to demonstrate multiple passes side-by-side) -->
+            <div id="confirmedOrderDetailsPass2" class="border border-slate-200 rounded-lg overflow-hidden hidden bg-white">
+                <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 font-semibold text-sm text-slate-800">
+                    10 Panel Drug, TB Screening Order Details
+                </div>
+                <div class="p-4 text-sm text-slate-700">
+                    <p class="mb-4 text-slate-800">To complete the health screening, this candidate must visit the following location no later than <span id="dueDateDisplayPass2" class="text-red-500 font-medium">Monday, May 11, 2026</span>.</p>
+                    
+                    <ul class="list-disc ml-6 mb-4 font-bold text-slate-800">
+                        <li>10 Panel Drug</li>
+                        <li>TB Screening</li>
+                    </ul>
+                    
+                    <div class="text-red-500 font-medium mb-4 flex gap-2 items-start text-xs sm:text-sm">
+                        <i class="fas fa-exclamation-circle mt-0.5 text-lg"></i>
+                        <span>This is not an appointment; you (the candidate) should contact the clinic and, if possible, preschedule a visit. Some clinics only offer "Walk-In" & waits may vary. Please plan accordingly.</span>
+                    </div>
+
+                    <!-- Lab Inner Box -->
+                    <div class="border border-slate-300 rounded-md p-4 bg-white shadow-sm flex flex-col sm:flex-row justify-between mb-4 mt-6 gap-4">
+                        <div class="flex-1 text-sm text-slate-800 leading-snug">
+                            <div class="font-bold">Labcorp</div>
+                            <div class="mb-1">Labcorp - Brooklyn Center</div>
+                            <div>186 JORALEMON ST 5TH FL<br>BROOKLYN, NY 11201</div>
+                            <div class="mt-1">(718) 237-4572</div>
+                            <div class="mt-3 font-bold">Approx<br>Distance: <span class="font-normal">3.20 miles</span></div>
+                        </div>
+                        
+                        <div class="flex-1">
+                            <table class="text-xs sm:text-sm text-slate-800 font-bold border-separate border-spacing-x-3 border-spacing-y-1">
+                                <tbody>
+                                    <tr><td class="text-right pr-3 text-slate-500 font-medium whitespace-nowrap align-top">Mon - Fri</td><td class="whitespace-nowrap pb-1">09:00 - 17:00</td></tr>
+                                    <tr><td class="text-right pr-3 text-slate-500 font-medium whitespace-nowrap align-top">Sat</td><td class="whitespace-nowrap pb-1">10:00 - 15:00</td></tr>
+                                    <tr><td class="text-right pr-3 text-slate-500 font-medium whitespace-nowrap align-top">Sun</td><td class="whitespace-nowrap pb-1">Closed</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="flex flex-col items-end gap-3 text-xs sm:text-sm font-bold text-primary whitespace-nowrap pt-1">
+                            <button onclick="openAvailabilityModal('10 Panel Drug, TB Screening')" class="hover:underline focus:outline-none tracking-wide">Change Location</button>
+                            <a href="#" class="hover:underline flex items-center gap-1 focus:outline-none tracking-wide font-normal">Get Directions <i class="fas fa-external-link-alt text-[10px]"></i></a>
+                        </div>
+                    </div>
+
+                    <button onclick="alert('Downloading Pass 2...')" class="w-full bg-[#0d6efd] text-white font-bold text-sm sm:text-base py-3.5 rounded hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mt-2 uppercase">
                         Download Donor Pass / ePassport <i class="far fa-file-pdf"></i>
                     </button>
                 </div>
@@ -469,7 +529,7 @@
                 <label class="block text-sm font-medium text-slate-600 mb-2">Select Passes to Modify<span class="text-red-500">*</span>:</label>
                 <div class="space-y-3 border border-slate-200 rounded-md p-3 bg-slate-50 max-h-64 overflow-y-auto">
                     <!-- Dynamic Pass 1 -->
-                    <label class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 transition-all">
+                    <label class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded cursor-pointer hover:border-blue-400 transition-all">
                         <div class="flex items-start gap-3 w-2/3 pr-2">
                             <input type="checkbox" name="pass_to_modify" value="pass1" checked class="mt-1">
                             <div class="text-xs">
@@ -486,7 +546,7 @@
                     </label>
 
                     <!-- Mock Pass 2 -->
-                    <label class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 transition-all">
+                    <label class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded cursor-pointer hover:border-blue-400 transition-all">
                         <div class="flex items-start gap-3 w-2/3 pr-2">
                             <input type="checkbox" name="pass_to_modify" value="pass2" class="mt-1">
                             <div class="text-xs">
@@ -902,8 +962,19 @@
                     if(isNaN(days)) days = 3;
                     const newDate = getFutureDate(days);
                     document.getElementById('dueDateDisplay').innerText = newDate;
+                    
+                    document.getElementById('initialOrderDetails').classList.add('hidden');
+                    document.getElementById('confirmedOrderDetails').classList.remove('hidden');
                     updatedAny = true;
                 } else if (pass.value === 'pass2') {
+                    let daysVal = document.getElementById('durationSelectPass2').value;
+                    let days = parseInt(daysVal);
+                    if(isNaN(days)) days = 3;
+                    const newDate = getFutureDate(days);
+                    document.getElementById('dueDateDisplayPass2').innerText = newDate;
+                    
+                    document.getElementById('initialOrderDetails').classList.add('hidden');
+                    document.getElementById('confirmedOrderDetailsPass2').classList.remove('hidden');
                     updatedAny = true;
                 }
             });
