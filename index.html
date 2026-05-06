@@ -50,7 +50,7 @@
             <h2 class="text-xl font-bold text-slate-900">Health Screening Checks</h2>
             <div class="flex flex-col items-end gap-2 text-sm">
                 <div class="flex items-center gap-2">
-                    <span id="expandAllText" class="text-primary font-medium cursor-pointer" onclick="toggleAllChecks()">Expand All</span>
+                    <span id="expandAllText" class="text-slate-900 font-medium cursor-pointer" onclick="toggleAllChecks()">Expand All</span>
                     <!-- Interactive Toggle Switch -->
                     <div id="expandAllToggle" onclick="toggleAllChecks()" class="w-8 h-4 bg-slate-300 rounded-full relative cursor-pointer transition-colors duration-200">
                         <div id="expandAllKnob" class="w-4 h-4 bg-white rounded-full absolute left-0 shadow border border-slate-200 transition-transform duration-200"></div>
@@ -59,13 +59,13 @@
                 
                 <!-- NEW DROPDOWN: Health Screening Actions -->
                 <div class="relative mt-2">
-                    <button id="actionMenuBtn" onclick="toggleActionMenu()" class="text-slate-500 font-semibold hover:text-slate-800 text-xs sm:text-sm tracking-wide focus:outline-none flex items-center gap-1.5 transition-colors">
+                    <button id="actionMenuBtn" onclick="toggleActionMenu()" class="text-primary font-semibold hover:text-blue-800 text-xs sm:text-sm tracking-wide focus:outline-none flex items-center gap-1.5 transition-colors">
                         Health Screening Actions <i class="fas fa-chevron-down text-[10px]"></i>
                     </button>
                     <div id="actionDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-50 py-1">
                         <button onclick="openModifyOrderFlow(); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Modify Order</button>
                         <button onclick="openDurationModal(); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Modify Pass Duration</button>
-                        <button onclick="openAvailabilityModal('All Health Screening Checks'); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Manage Appointment</button>
+                        <button onclick="openAvailabilityModal('All Health Screening Checks'); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Change Location for All</button>
                     </div>
                 </div>
             </div>
@@ -456,41 +456,55 @@
 
     <!-- MODIFY DURATION MODAL -->
     <div id="durationModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden flex items-center justify-center z-[60]">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-[500px] w-full">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-slate-800">Modify Pass Duration</h3>
                 <button onclick="closeDurationModal()" class="text-slate-400 hover:text-slate-600">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            <p class="text-sm text-slate-600 mb-6">Select a donor pass below to update its duration without changing the clinic location.</p>
+            <p class="text-sm text-slate-600 mb-6">Select donor passes below and update their durations without changing the clinic location.</p>
             
             <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-600 mb-2">Select Pass to Modify<span class="text-red-500">*</span>:</label>
-                <div class="space-y-3 border border-slate-200 rounded-md p-3 bg-slate-50 max-h-48 overflow-y-auto">
-                    <label class="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 transition-all">
-                        <input type="radio" name="pass_to_modify" value="pass1" checked class="mt-1">
-                        <div class="text-xs">
-                            <div class="font-bold text-slate-800 text-sm mb-1">Vaccine, Drug, Basic Physical, Titers</div>
-                            <div id="durationModalLabName" class="text-slate-600 font-medium">Pending Selection...</div>
-                            <div class="text-slate-500 mt-1">Current Expiration: <span id="durationModalDateDisplay" class="font-medium text-red-500">N/A</span></div>
+                <label class="block text-sm font-medium text-slate-600 mb-2">Select Passes to Modify<span class="text-red-500">*</span>:</label>
+                <div class="space-y-3 border border-slate-200 rounded-md p-3 bg-slate-50 max-h-64 overflow-y-auto">
+                    <!-- Dynamic Pass 1 -->
+                    <label class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 transition-all">
+                        <div class="flex items-start gap-3 w-2/3 pr-2">
+                            <input type="checkbox" name="pass_to_modify" value="pass1" checked class="mt-1">
+                            <div class="text-xs">
+                                <div class="font-bold text-slate-800 text-[13px] mb-1 leading-snug">Vaccine, Drug, Basic Physical, Titers</div>
+                                <div id="durationModalLabName" class="text-slate-600 font-medium">Pending Selection...</div>
+                                <div class="text-slate-500 mt-1">Current Expiration: <span id="durationModalDateDisplay" class="font-medium text-red-500">N/A</span></div>
+                            </div>
+                        </div>
+                        <div class="w-1/3 flex flex-col items-end border-l border-slate-100 pl-3">
+                            <span class="text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">Duration</span>
+                            <select id="durationSelectPass1" class="w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-medium text-slate-700 focus:ring-primary focus:border-primary bg-slate-50 outline-none">
+                            </select>
+                        </div>
+                    </label>
+
+                    <!-- Mock Pass 2 -->
+                    <label class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 transition-all">
+                        <div class="flex items-start gap-3 w-2/3 pr-2">
+                            <input type="checkbox" name="pass_to_modify" value="pass2" class="mt-1">
+                            <div class="text-xs">
+                                <div class="font-bold text-slate-800 text-[13px] mb-1 leading-snug">10 Panel Drug, TB Screening</div>
+                                <div class="text-slate-600 font-medium">Labcorp - Brooklyn Center</div>
+                                <div class="text-slate-500 mt-1">Current Expiration: <span class="font-medium text-red-500">Mon, May 11, 2026</span></div>
+                            </div>
+                        </div>
+                        <div class="w-1/3 flex flex-col items-end border-l border-slate-100 pl-3">
+                            <span class="text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wide">Duration</span>
+                            <select id="durationSelectPass2" class="w-full border border-slate-300 rounded px-2 py-1.5 text-xs font-medium text-slate-700 focus:ring-primary focus:border-primary bg-slate-50 outline-none">
+                            </select>
                         </div>
                     </label>
                 </div>
             </div>
             
-            <div class="flex items-center mb-8">
-                <label class="w-1/2 text-sm font-medium text-slate-600">New Duration<span class="text-red-500">*</span>:</label>
-                <div class="w-1/2 flex gap-2">
-                    <select id="onlyDurationSelect" class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary bg-slate-50 cursor-pointer max-h-48 overflow-y-auto">
-                    </select>
-                    <div class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 bg-slate-50 flex items-center justify-center">
-                        Days
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex justify-end gap-3">
+            <div class="flex justify-end gap-3 mt-8">
                 <button onclick="closeDurationModal()" class="px-4 py-2 border border-slate-300 text-slate-600 font-medium rounded-md hover:bg-slate-50 transition-colors">Cancel</button>
                 <button onclick="confirmDurationChange()" class="px-6 py-2 bg-primary text-white font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
                     <i class="fas fa-sync-alt"></i> Update Pass
@@ -649,8 +663,8 @@
             // Radius selects (Both old modal and new Schedule Flow)
             populateDropdowns(['radiusSelect', 'schedRadiusSelect'], 5, 100, 5, 50);
             
-            // Duration selects (Including new Schedule Flow)
-            populateDropdowns(['durationSelect', 'onlyDurationSelect', 'schedDurationSelect'], 1, 90, 1, 3, " days");
+            // Duration selects (Including new Schedule Flow and Passes)
+            populateDropdowns(['durationSelect', 'durationSelectPass1', 'durationSelectPass2', 'schedDurationSelect'], 1, 90, 1, 3, " days");
         });
 
         // Dropdown Menu Logic (Top Right)
@@ -873,21 +887,31 @@
         function closeDurationModal() { document.getElementById('durationModal').classList.add('hidden'); }
 
         function confirmDurationChange() {
-            const selectedPass = document.querySelector('input[name="pass_to_modify"]:checked');
-            if(!selectedPass) {
-                alert("Please select a pass to modify.");
+            const selectedPasses = document.querySelectorAll('input[name="pass_to_modify"]:checked');
+            if(selectedPasses.length === 0) {
+                alert("Please select at least one pass to modify.");
                 return;
             }
 
-            const days = document.getElementById('onlyDurationSelect').value;
-            const newDate = getFutureDate(days);
+            let updatedAny = false;
             
-            if (selectedPass.value === 'pass1') {
-                document.getElementById('dueDateDisplay').innerText = newDate;
+            selectedPasses.forEach(pass => {
+                if (pass.value === 'pass1') {
+                    let daysVal = document.getElementById('durationSelectPass1').value;
+                    let days = parseInt(daysVal);
+                    if(isNaN(days)) days = 3;
+                    const newDate = getFutureDate(days);
+                    document.getElementById('dueDateDisplay').innerText = newDate;
+                    updatedAny = true;
+                } else if (pass.value === 'pass2') {
+                    updatedAny = true;
+                }
+            });
+            
+            if (updatedAny) {
+                alert("Success! The duration for the selected donor passes has been updated.");
+                closeDurationModal();
             }
-            
-            alert("Success! Your pass duration has been extended to " + newDate + ". A new pass has been issued.");
-            closeDurationModal();
         }
 
         function handleSearch(e) {
