@@ -1,1 +1,1096 @@
-# Healthscreening-UI-for-VP-page-Part-2
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modify Health Screening Flow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Include jsPDF for generating the Donor Pass PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        attention: '#fb7185',
+                        bglight: '#f8fafc',
+                        pinkbtn: '#f43f5e'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbars */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .modal-scroll::-webkit-scrollbar { width: 6px; }
+        
+        /* Custom radio button styling */
+        input[type="radio"], input[type="checkbox"] {
+            accent-color: #2563eb;
+            width: 1.15rem;
+            height: 1.15rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-slate-300 p-8 font-sans text-slate-800 min-h-screen">
+
+    <!-- Main Dashboard Card -->
+    <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        
+        <!-- Header Section -->
+        <div class="flex justify-between items-start mb-6">
+            <h2 class="text-xl font-bold text-slate-900">Health Screening Checks</h2>
+            <div class="flex flex-col items-end gap-2 text-sm">
+                <div class="flex items-center gap-2">
+                    <span id="expandAllText" class="text-primary font-medium cursor-pointer" onclick="toggleAllChecks()">Expand All</span>
+                    <!-- Interactive Toggle Switch -->
+                    <div id="expandAllToggle" onclick="toggleAllChecks()" class="w-8 h-4 bg-slate-300 rounded-full relative cursor-pointer transition-colors duration-200">
+                        <div id="expandAllKnob" class="w-4 h-4 bg-white rounded-full absolute left-0 shadow border border-slate-200 transition-transform duration-200"></div>
+                    </div>
+                </div>
+                
+                <!-- NEW DROPDOWN: Health Screening Actions -->
+                <div class="relative mt-2">
+                    <button id="actionMenuBtn" onclick="toggleActionMenu()" class="text-slate-500 font-semibold hover:text-slate-800 text-xs sm:text-sm tracking-wide focus:outline-none flex items-center gap-1.5 transition-colors">
+                        Health Screening Actions <i class="fas fa-chevron-down text-[10px]"></i>
+                    </button>
+                    <div id="actionDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-md shadow-lg z-50 py-1">
+                        <button onclick="openModifyOrderFlow(); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Modify Order</button>
+                        <button onclick="openDurationModal(); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Modify Pass Duration</button>
+                        <button onclick="openAvailabilityModal('All Health Screening Checks'); closeActionMenu();" class="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-primary transition-colors">Manage Appointment</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- List of Checks -->
+        <div class="space-y-4 mb-6">
+            <div class="flex justify-between items-start border-b border-slate-100 pb-2">
+                <div>
+                    <div class="flex items-center gap-2 text-slate-700 font-medium cursor-pointer select-none" onclick="toggleCheckDetails('drugCheckDetails', this)">
+                        Drug Check <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform duration-200 check-chevron"></i>
+                    </div>
+                    <div id="drugCheckDetails" class="text-xs text-slate-500 mt-1 pl-1 border-l-2 border-slate-200 ml-1 transition-all hidden check-detail-section">
+                        • 5 Panel Drug
+                    </div>
+                </div>
+                <span id="statusBadge1" class="bg-attention text-white text-xs px-3 py-1 rounded-full font-medium transition-colors">Attention</span>
+            </div>
+            
+            <div class="flex justify-between items-start border-b border-slate-100 pb-2">
+                <div>
+                    <div class="flex items-center gap-2 text-slate-700 font-medium cursor-pointer select-none" onclick="toggleCheckDetails('titersDetails', this)">
+                        Titers <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform duration-200 check-chevron"></i>
+                    </div>
+                    <div id="titersDetails" class="text-xs text-slate-500 mt-1 pl-1 border-l-2 border-slate-200 ml-1 transition-all hidden check-detail-section">
+                        • Hep B Surface Antibody (HBsAb)<br>
+                        • MMR Titer<br>
+                        • Varicella Titer
+                    </div>
+                </div>
+                <span id="statusBadge2" class="bg-attention text-white text-xs px-3 py-1 rounded-full font-medium transition-colors">Attention</span>
+            </div>
+
+            <div class="flex justify-between items-start border-b border-slate-100 pb-2">
+                <div>
+                    <div class="flex items-center gap-2 text-slate-700 font-medium cursor-pointer select-none" onclick="toggleCheckDetails('vaccineDetails', this)">
+                        Vaccine <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform duration-200 check-chevron"></i>
+                    </div>
+                    <div id="vaccineDetails" class="text-xs text-slate-500 mt-1 pl-1 border-l-2 border-slate-200 ml-1 transition-all hidden check-detail-section">
+                        • Hepatitis-B Vaccine
+                    </div>
+                </div>
+                <span id="statusBadge3" class="bg-attention text-white text-xs px-3 py-1 rounded-full font-medium transition-colors">Attention</span>
+            </div>
+
+            <div class="flex justify-between items-start pb-2">
+                <div>
+                    <div class="flex items-center gap-2 text-slate-700 font-medium cursor-pointer select-none" onclick="toggleCheckDetails('physicalDetails', this)">
+                        Basic Physical <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform duration-200 check-chevron"></i>
+                    </div>
+                    <div id="physicalDetails" class="text-xs text-slate-500 mt-1 pl-1 border-l-2 border-slate-200 ml-1 transition-all hidden check-detail-section">
+                        • Basic Physical
+                    </div>
+                </div>
+                <span id="statusBadge4" class="bg-attention text-white text-xs px-3 py-1 rounded-full font-medium transition-colors">Attention</span>
+            </div>
+        </div>
+
+        <!-- Dynamic Order Details Area -->
+        <div id="orderDetailsWrapper" class="space-y-4">
+            
+            <!-- INITIAL STATE: Action Required (Updated to multiple blocks) -->
+            <div id="initialOrderDetails" class="space-y-4">
+                <!-- 5 Panel Drug -->
+                <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                    <div class="bg-[#f8fafc] px-4 py-2.5 border-b border-slate-200 font-bold text-[13px] text-slate-800">
+                        5 Panel Drug Order Details
+                    </div>
+                    <div class="p-4 text-[13px] text-slate-700">
+                        <p class="mb-6 leading-relaxed">Please click on 'Schedule' to schedule this health screening order. If you have any questions, please contact Vetty support at <a href="#" class="text-blue-600 hover:underline">support@vetty.co</a></p>
+                        <button onclick="openScheduleFlowDirectly('5 Panel Drug')" class="text-blue-600 font-medium hover:underline text-[13px] focus:outline-none">Schedule</button>
+                    </div>
+                </div>
+
+                <!-- Titers -->
+                <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                    <div class="bg-[#f8fafc] px-4 py-2.5 border-b border-slate-200 font-bold text-[13px] text-slate-800">
+                        Titers Order Details
+                    </div>
+                    <div class="p-4 text-[13px] text-slate-700">
+                        <p class="mb-6 leading-relaxed">Please click on 'Schedule' to schedule this health screening order. If you have any questions, please contact Vetty support at <a href="#" class="text-blue-600 hover:underline">support@vetty.co</a></p>
+                        <button onclick="openScheduleFlowDirectly('Titers (Hep B Surface Antibody, MMR, Varicella)')" class="text-blue-600 font-medium hover:underline text-[13px] focus:outline-none">Schedule</button>
+                    </div>
+                </div>
+
+                <!-- Vaccine -->
+                <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                    <div class="bg-[#f8fafc] px-4 py-2.5 border-b border-slate-200 font-bold text-[13px] text-slate-800">
+                        Vaccine Order Details
+                    </div>
+                    <div class="p-4 text-[13px] text-slate-700">
+                        <p class="mb-6 leading-relaxed">Please click on 'Schedule' to schedule this health screening order. If you have any questions, please contact Vetty support at <a href="#" class="text-blue-600 hover:underline">support@vetty.co</a></p>
+                        <button onclick="openScheduleFlowDirectly('Hepatitis-B Vaccine')" class="text-blue-600 font-medium hover:underline text-[13px] focus:outline-none">Schedule</button>
+                    </div>
+                </div>
+
+                <!-- Basic Physical -->
+                <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
+                    <div class="bg-[#f8fafc] px-4 py-2.5 border-b border-slate-200 font-bold text-[13px] text-slate-800">
+                        Basic Physical Order Details
+                    </div>
+                    <div class="p-4 text-[13px] text-slate-700">
+                        <p class="mb-6 leading-relaxed">Please click on 'Schedule' to schedule this health screening order. If you have any questions, please contact Vetty support at <a href="#" class="text-blue-600 hover:underline">support@vetty.co</a></p>
+                        <button onclick="openScheduleFlowDirectly('Basic Physical')" class="text-blue-600 font-medium hover:underline text-[13px] focus:outline-none">Schedule</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONFIRMED STATE -->
+            <div id="confirmedOrderDetails" class="border border-slate-200 rounded-lg overflow-hidden hidden bg-white">
+                <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 font-semibold text-sm text-slate-800">
+                    Vaccine, Drug, Basic Physical, Titers Order Details
+                </div>
+                <div class="p-4 text-sm text-slate-700">
+                    <p class="mb-4 text-slate-800">To complete the health screening, this candidate must visit the following location no later than <span id="dueDateDisplay" class="text-red-500 font-medium">Friday, April 03, 2026</span>.</p>
+                    
+                    <ul class="list-disc ml-6 mb-4 font-bold text-slate-800">
+                        <li>Vaccine</li>
+                        <li>Drug</li>
+                        <li>Basic Physical</li>
+                        <li>Titers</li>
+                    </ul>
+                    
+                    <div class="text-red-500 font-medium mb-4 flex gap-2 items-start text-xs sm:text-sm">
+                        <i class="fas fa-exclamation-circle mt-0.5 text-lg"></i>
+                        <span>This is not an appointment; you (the candidate) should contact the clinic and, if possible, preschedule a visit. Some clinics only offer "Walk-In" & waits may vary. Please plan accordingly.</span>
+                    </div>
+
+                    <!-- Lab Inner Box -->
+                    <div class="border border-slate-300 rounded-md p-4 bg-white shadow-sm flex flex-col sm:flex-row justify-between mb-4 mt-6 gap-4">
+                        <!-- Left Col: Address -->
+                        <div class="flex-1 text-sm text-slate-800 leading-snug">
+                            <div class="font-bold" id="confLabCompany">Escreen</div>
+                            <div id="confLabName" class="mb-1">Medical Associates of Wall Street, PC</div>
+                            <div id="confLabAddress">156 WILLIAM ST<br>NEW YORK, NY 10038</div>
+                            <div id="confLabPhone" class="mt-1">(212) 233-3040</div>
+                            <div class="mt-3 font-bold">Approx<br>Distance: <span id="confLabDistance" class="font-normal">3.00 miles</span></div>
+                        </div>
+                        
+                        <!-- Middle Col: Timings (Dynamic) -->
+                        <div class="flex-1">
+                            <table class="text-xs sm:text-sm text-slate-800 font-bold border-separate border-spacing-x-3 border-spacing-y-1">
+                                <tbody id="confLabTimings">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Right Col: Actions (Title Case) -->
+                        <div class="flex flex-col items-end gap-3 text-xs sm:text-sm font-bold text-primary whitespace-nowrap pt-1">
+                            <button onclick="openAvailabilityModal('Vaccine, Drug, Basic Physical, Titers')" class="hover:underline focus:outline-none tracking-wide">Change Location</button>
+                            <a href="#" class="hover:underline flex items-center gap-1 focus:outline-none tracking-wide font-normal">Get Directions <i class="fas fa-external-link-alt text-[10px]"></i></a>
+                        </div>
+                    </div>
+
+                    <!-- Download Button -->
+                    <button onclick="downloadExistingPass()" class="w-full bg-[#0d6efd] text-white font-bold text-sm sm:text-base py-3.5 rounded hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mt-2 uppercase">
+                        Download Donor Pass / ePassport <i class="far fa-file-pdf"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- NEW: FULL SCREEN MODIFY ORDER FLOW (IMAGE 1) -->
+    <!-- ========================================== -->
+    <div id="modifyOrderOverlay" class="fixed inset-0 bg-[#ccd4da] z-[70] hidden flex-col items-center pt-10 overflow-y-auto pb-10">
+        
+        <!-- Close Button -->
+        <button onclick="closeModifyOrderFlow()" class="absolute top-6 right-8 text-slate-500 hover:text-slate-800 text-sm font-bold flex items-center gap-1">
+            <i class="fas fa-times"></i> Close
+        </button>
+
+        <!-- Background Page Simulation -->
+        <h2 class="text-2xl font-bold text-slate-800 mb-8 tracking-wide">Modify Health Screening Order</h2>
+        
+        <!-- Background Stepper -->
+        <div class="flex justify-center items-start w-full max-w-2xl relative mb-8">
+            <!-- connecting lines -->
+            <div class="absolute top-[18px] left-[16.6%] w-[33%] h-0.5 bg-[#22c55e] z-0"></div>
+            <div class="absolute top-[18px] left-[50%] w-[33%] h-0.5 bg-[#22c55e] z-0"></div>
+            
+            <!-- Step 1 -->
+            <div class="flex flex-col items-center z-10 w-1/3">
+                <div class="w-9 h-9 bg-[#22c55e] rounded-full flex items-center justify-center text-white font-bold text-2xl mb-1">-</div>
+                <div class="text-xs font-semibold text-slate-500">Step 1</div>
+                <div class="text-sm font-bold text-slate-800 mb-1">Remove Check(s)</div>
+                <div class="bg-[#22c55e] text-white text-[10px] px-3 py-0.5 rounded-full font-bold uppercase tracking-wide">COMPLETED</div>
+            </div>
+            <!-- Step 2 -->
+            <div class="flex flex-col items-center z-10 w-1/3">
+                <div class="w-9 h-9 bg-[#22c55e] rounded-full flex items-center justify-center text-white font-bold text-2xl mb-1">+</div>
+                <div class="text-xs font-semibold text-slate-500">Step 2</div>
+                <div class="text-sm font-bold text-slate-800 mb-1">Add New Check(s)</div>
+                <div class="bg-[#22c55e] text-white text-[10px] px-3 py-0.5 rounded-full font-bold uppercase tracking-wide">COMPLETED</div>
+            </div>
+            <!-- Step 3 -->
+            <div class="flex flex-col items-center z-10 w-1/3">
+                <div class="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-lg mb-1"><i class="fas fa-check"></i></div>
+                <div class="text-xs font-semibold text-slate-500">Step 3</div>
+                <div class="text-sm font-bold text-slate-800 mb-1">Confirm Order</div>
+                <div class="bg-blue-600 text-white text-[10px] px-3 py-0.5 rounded-full font-bold uppercase tracking-wide">IN PROGRESS</div>
+            </div>
+        </div>
+
+        <!-- The White Popup Overlay Box -->
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-[480px] w-full relative z-20 mt-4">
+            
+            <label class="block text-sm font-bold text-slate-800 mb-2">Donor Pass Duration (Calendar Days) :</label>
+            <select class="w-full border border-slate-400 rounded p-2 text-sm text-slate-800 font-medium focus:outline-none mb-2 bg-white">
+                <option value="3">3 days</option>
+                <option value="5">5 days</option>
+                <option value="7">7 days</option>
+            </select>
+            
+            <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+                The account's default donor pass duration is automatically displayed. Feel free to customize this duration if required for this candidate. The countdown will begin upon donor pass generation.
+            </p>
+            
+            <p class="text-xs text-slate-500 mb-8 leading-relaxed">
+                Would you prefer to complete the scheduling yourself or would you prefer the candidate to complete the scheduling themselves?
+            </p>
+            
+            <div class="flex justify-between items-center mt-2">
+                <button onclick="goToScheduleStep()" class="bg-[#f1f5f9] hover:bg-[#e2e8f0] text-slate-400 font-semibold px-6 py-2.5 rounded-full text-sm transition-colors focus:outline-none">
+                    Schedule
+                </button>
+                <button onclick="alert('Invitation sent to candidate successfully!'); closeModifyOrderFlow();" class="bg-[#f43f5e] hover:bg-rose-600 text-white font-semibold px-6 py-2.5 rounded-full text-sm transition-colors focus:outline-none shadow-sm shadow-rose-200">
+                    Send To Candidate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- NEW: SCHEDULE FLOW (STEP 1) (IMAGE 2 & 3)  -->
+    <!-- ========================================== -->
+    <div id="scheduleFlowOverlay" class="fixed inset-0 bg-[#f8fafc] z-[80] hidden flex-col items-center pt-10 overflow-y-auto pb-10">
+        
+        <button onclick="closeModifyOrderFlow()" class="absolute top-6 right-8 text-slate-500 hover:text-slate-800 text-sm font-bold flex items-center gap-1">
+            <i class="fas fa-times"></i> Close
+        </button>
+
+        <!-- Stepper Top -->
+        <div class="flex justify-center items-start w-full max-w-2xl relative mb-8">
+            <!-- connecting lines -->
+            <div class="absolute top-[18px] left-[16.6%] w-[33%] h-[3px] bg-slate-200 z-0 flex">
+                <div class="w-1/2 h-full bg-blue-600"></div>
+            </div>
+            <div class="absolute top-[18px] left-[50%] w-[33%] h-[3px] bg-slate-200 z-0"></div>
+            
+            <!-- Step 1 -->
+            <div class="flex flex-col items-center z-10 w-1/3">
+                <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white text-lg mb-1"><i class="fas fa-search"></i></div>
+                <div class="text-[11px] font-bold text-blue-600 uppercase">Step 1</div>
+                <div class="text-xs font-bold text-slate-800 mb-1">Enter Your Location</div>
+                <div class="bg-blue-600 text-white text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-wide">IN PROGRESS</div>
+            </div>
+            <!-- Step 2 -->
+            <div class="flex flex-col items-center z-10 w-1/3">
+                <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-white text-lg mb-1"><i class="fas fa-star"></i></div>
+                <div class="text-[11px] font-bold text-slate-300 uppercase">Step 2</div>
+                <div class="text-xs font-bold text-slate-800 mb-1">Select Clinic(s)</div>
+                <div class="bg-slate-200 text-slate-500 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-wide">NOT STARTED</div>
+            </div>
+            <!-- Step 3 -->
+            <div class="flex flex-col items-center z-10 w-1/3">
+                <div class="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-white text-lg mb-1"><i class="fas fa-download"></i></div>
+                <div class="text-[11px] font-bold text-slate-300 uppercase">Step 3</div>
+                <div class="text-xs font-bold text-slate-800 mb-1">Download Your Donor Pass</div>
+                <div class="bg-slate-200 text-slate-500 text-[9px] px-3 py-0.5 rounded-full font-bold uppercase tracking-wide">NOT STARTED</div>
+            </div>
+        </div>
+
+        <h2 class="text-2xl font-bold text-slate-800 mb-3">Let's Schedule Your Health Screening</h2>
+        
+        <!-- Dynamic Context Display -->
+        <div class="mb-6 flex items-center gap-2">
+             <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Selected Checks:</span>
+             <span id="scheduleFlowContextText" class="text-sm font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-md border border-blue-100 shadow-sm">All Checks</span>
+        </div>
+
+        <!-- The White Form Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-8 max-w-2xl w-full">
+            
+            <form onsubmit="handleScheduleSearch(event)">
+                <!-- Clinic Preference Multi-Select -->
+                <div class="mb-6 relative z-20">
+                    <div class="flex items-center gap-1 mb-2">
+                        <label class="block text-sm font-bold text-slate-800">
+                            Clinic Preference (Multi-Select)<span class="text-red-500">*</span>: 
+                        </label>
+                        <div class="group relative flex items-center">
+                            <i class="fas fa-info-circle text-blue-500 cursor-pointer text-sm"></i>
+                            <div class="absolute bottom-full left-[-8px] mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded shadow-xl p-3 z-[100] text-left font-normal leading-relaxed cursor-default">
+                                <p class="mb-2"><strong class="text-white">Preferred Clinics:</strong> Our go-to clinics offering affordable pricing and a streamlined experience.</p>
+                                <p><strong class="text-white">More Options:</strong> A broader set of clinics that offer more flexibility in where candidates can go.</p>
+                                <div class="absolute top-full left-3 border-4 border-transparent border-t-slate-800"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="relative w-full max-w-md">
+                        <button type="button" onclick="toggleScheduleClinicDropdown()" class="w-full border border-slate-300 rounded-md px-3 py-2.5 text-sm bg-slate-50 focus:outline-none flex justify-between items-center text-left">
+                            <span id="scheduleDropdownText" class="truncate font-medium text-slate-400">Select Preferences...</span>
+                            <i class="fas fa-chevron-down text-xs text-slate-500"></i>
+                        </button>
+                        <!-- Dropdown Menu -->
+                        <div id="scheduleClinicDropdown" class="hidden absolute z-10 w-full mt-1 bg-[#f8fafc] border border-slate-200 rounded-md shadow-lg">
+                            <div class="p-3 space-y-3 text-sm text-slate-600 font-medium tracking-wide">
+                                <label class="flex items-center gap-3 cursor-pointer hover:text-primary transition-colors">
+                                    <input type="checkbox" value="Preferred Clinics" onchange="updateDropdownText('scheduleClinicDropdown', 'scheduleDropdownText')" class="rounded border-slate-300 text-primary w-4 h-4 bg-white">
+                                    Preferred Clinics
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer hover:text-primary transition-colors">
+                                    <input type="checkbox" value="Preferred Clinics & More Options" onchange="updateDropdownText('scheduleClinicDropdown', 'scheduleDropdownText')" class="rounded border-slate-300 text-primary w-4 h-4 bg-white">
+                                    Preferred Clinics & More Options
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-800 mb-2">Donor Pass Duration (Calendar Days)</label>
+                    <select id="schedDurationSelect" class="w-full max-w-md border border-slate-800 rounded p-2 text-sm text-slate-800 font-medium focus:outline-none mb-1">
+                        <!-- Populated by JS -->
+                    </select>
+                    <p class="text-[11px] sm:text-xs text-slate-500 leading-relaxed max-w-md">
+                        The account's default donor pass duration is automatically displayed. Feel free to customize this duration if required for this candidate. The countdown will begin upon donor pass generation.
+                    </p>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-800 mb-2">Radius in miles</label>
+                    <select id="schedRadiusSelect" class="w-full max-w-md border border-slate-800 rounded p-2 text-sm text-slate-800 font-medium focus:outline-none">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-800 mb-1">Enter Your Location</label>
+                    <p class="text-xs text-slate-500 mb-4">Please enter the nearest ZIP Code to your desired location.</p>
+                    
+                    <div class="flex items-end gap-4">
+                        <!-- ZIP Code Fieldset visual replica -->
+                        <div class="relative border border-slate-300 rounded-md px-3 py-2 w-48 bg-slate-50 h-10 flex items-center">
+                            <label class="absolute -top-2 left-2 bg-white px-1 text-[10px] font-bold text-slate-500 tracking-wide">ZIP Code</label>
+                            <div class="flex items-center gap-2 w-full mt-1">
+                                <i class="fas fa-search text-slate-400 text-sm"></i>
+                                <input type="text" id="schedZipInput" value="11211" class="bg-transparent focus:outline-none w-full text-sm font-medium text-slate-700">
+                            </div>
+                        </div>
+
+                        <!-- Square Search Button -->
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-2.5 rounded text-sm transition-colors focus:outline-none shadow-sm h-10 flex items-center justify-center">
+                            Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Integration: Show Dynamic Labs below search in the same card context -->
+            <div id="scheduleFlowResultsSection" class="hidden mt-8 border-t border-slate-200 pt-6">
+                <h4 class="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wide">Select Clinic(s)</h4>
+                
+                <div id="scheduleFlowDynamicLabContainer" class="space-y-4 mb-6 max-h-[40vh] overflow-y-auto pr-2 modal-scroll pb-2">
+                    <!-- Labs injected here dynamically matching the main search logic -->
+                </div>
+                
+                <div class="flex justify-end border-t border-slate-200 pt-4">
+                    <button onclick="triggerConfirmationFromSchedule()" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2 text-sm uppercase">
+                        Download Donor Pass / ePassport <i class="fas fa-download ml-1"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- EXISTING MODALS & SCRIPTS RETAINED COMPLETELY -->
+    <!-- ========================================== -->
+
+    <!-- MODIFY DURATION MODAL -->
+    <div id="durationModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden flex items-center justify-center z-[60]">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-800">Modify Pass Duration</h3>
+                <button onclick="closeDurationModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <p class="text-sm text-slate-600 mb-6">Select a donor pass below to update its duration without changing the clinic location.</p>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-slate-600 mb-2">Select Pass to Modify<span class="text-red-500">*</span>:</label>
+                <div class="space-y-3 border border-slate-200 rounded-md p-3 bg-slate-50 max-h-48 overflow-y-auto">
+                    <label class="flex items-start gap-3 p-3 bg-white border border-slate-200 rounded cursor-pointer hover:border-blue-400 has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 transition-all">
+                        <input type="radio" name="pass_to_modify" value="pass1" checked class="mt-1">
+                        <div class="text-xs">
+                            <div class="font-bold text-slate-800 text-sm mb-1">Vaccine, Drug, Basic Physical, Titers</div>
+                            <div id="durationModalLabName" class="text-slate-600 font-medium">Pending Selection...</div>
+                            <div class="text-slate-500 mt-1">Current Expiration: <span id="durationModalDateDisplay" class="font-medium text-red-500">N/A</span></div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="flex items-center mb-8">
+                <label class="w-1/2 text-sm font-medium text-slate-600">New Duration<span class="text-red-500">*</span>:</label>
+                <div class="w-1/2 flex gap-2">
+                    <select id="onlyDurationSelect" class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary bg-slate-50 cursor-pointer max-h-48 overflow-y-auto">
+                    </select>
+                    <div class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 bg-slate-50 flex items-center justify-center">
+                        Days
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-3">
+                <button onclick="closeDurationModal()" class="px-4 py-2 border border-slate-300 text-slate-600 font-medium rounded-md hover:bg-slate-50 transition-colors">Cancel</button>
+                <button onclick="confirmDurationChange()" class="px-6 py-2 bg-primary text-white font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
+                    <i class="fas fa-sync-alt"></i> Update Pass
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REORDERED CONFIRMATION MODAL (NOW z-[90] SO IT OPENS ABOVE EVERYTHING) -->
+    <div id="confirmChangeModal" class="fixed inset-0 bg-slate-900 bg-opacity-60 hidden flex items-center justify-center z-[90]">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
+            <p class="text-slate-800 mb-8 font-medium text-lg leading-snug">
+                Confirm location change? A new donor pass will be issued, and the old pass will be invalid.
+            </p>
+            <div class="flex justify-center gap-8">
+                <button onclick="closeConfirmModal()" class="px-6 py-2 bg-pinkbtn text-white font-semibold rounded-full hover:bg-rose-600 transition-colors shadow-sm">
+                    Cancel
+                </button>
+                <button onclick="executeConfirmedChange()" class="px-8 py-2 bg-primary text-white font-semibold rounded-full hover:bg-blue-700 transition-colors shadow-sm">
+                    Yes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AVAILABILITY & RESCHEDULE MODAL -->
+    <div id="availabilityModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                <h3 class="text-md sm:text-lg font-bold text-slate-800 truncate">Check Clinic Availability & Reschedule & Generate New Donor Pass</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 ml-4 flex-shrink-0">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <div class="max-w-xl mx-auto mb-6 bg-orange-50 border border-orange-100 p-4 rounded-md flex items-start gap-3">
+                    <i class="fas fa-bullseye text-orange-600 mt-1"></i>
+                    <div>
+                        <div class="font-bold text-orange-900 text-sm mb-1">Added Health Screening Checks</div>
+                        <div id="availabilityChecksList" class="text-sm text-orange-800 leading-relaxed font-semibold">
+                            5 Panel Drug, Hep B Surface Antibody (HBsAb), MMR Titer, Varicella Titer, Hepatitis-B Vaccine, Basic Physical
+                        </div>
+                    </div>
+                </div>
+
+                <form id="clinicSearchForm" class="space-y-4 max-w-xl mx-auto" onsubmit="handleSearch(event)">
+                    <div class="flex items-center relative z-20">
+                        <div class="w-1/3 text-sm font-medium text-slate-600 text-right pr-4 flex justify-end items-center gap-1">
+                            <span>Clinic Preference (Multi-Select)<span class="text-red-500">*</span>:</span>
+                            <div class="group relative flex items-center">
+                                <i class="fas fa-info-circle text-blue-500 cursor-pointer text-sm"></i>
+                                <div class="absolute bottom-full right-[-8px] mb-2 hidden group-hover:block w-64 bg-slate-800 text-white text-xs rounded shadow-xl p-3 z-[100] text-left font-normal leading-relaxed cursor-default">
+                                    <p class="mb-2"><strong class="text-white">Preferred Clinics:</strong> Our go-to clinics offering affordable pricing and a streamlined experience.</p>
+                                    <p><strong class="text-white">More Options:</strong> A broader set of clinics that offer more flexibility in where candidates can go.</p>
+                                    <div class="absolute top-full right-3 border-4 border-transparent border-t-slate-800"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-2/3 relative">
+                            <button type="button" onclick="toggleDropdown('clinicDropdown')" class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-primary flex justify-between items-center text-left">
+                                <span id="clinicDropdownText" class="truncate block w-[90%] text-slate-400">Select Preferences...</span>
+                                <i class="fas fa-chevron-down text-xs text-slate-400"></i>
+                            </button>
+                            <div id="clinicDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg">
+                                <div class="p-3 space-y-3 text-sm text-slate-700">
+                                    <label class="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors">
+                                        <input type="checkbox" value="Preferred Clinics" onchange="updateDropdownText('clinicDropdown', 'clinicDropdownText')" class="rounded border-slate-300 text-primary">
+                                        Preferred Clinics
+                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors">
+                                        <input type="checkbox" value="Preferred Clinics & More Options" onchange="updateDropdownText('clinicDropdown', 'clinicDropdownText')" class="rounded border-slate-300 text-primary">
+                                        Preferred Clinics & More Options
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <label class="w-1/3 text-sm font-medium text-slate-600 text-right pr-4">Enter ZIP Code<br><span class="text-xs text-slate-400">(Required to Check Availability)</span>:</label>
+                        <input type="text" id="zipcodeInput" value="11211" maxlength="5" pattern="\d{5}" title="Five digit ZIP code" placeholder="e.g. 11211" class="w-2/3 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" required>
+                    </div>
+
+                    <div class="flex items-center">
+                        <label class="w-1/3 text-sm font-medium text-slate-600 text-right pr-4">Radius<br><span class="text-xs text-slate-400">(Required to Check Availability)</span>:</label>
+                        <div class="w-2/3 flex gap-2">
+                            <select id="radiusSelect" class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary bg-slate-50 cursor-pointer max-h-48 overflow-y-auto">
+                            </select>
+                            <div class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 bg-slate-50 flex items-center">
+                                Miles
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center">
+                        <label class="w-1/3 text-sm font-medium text-slate-600 text-right pr-4">Donor Pass Duration<span class="text-red-500">*</span> :</label>
+                        <div class="w-2/3 flex gap-2">
+                            <select id="durationSelect" class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary bg-slate-50 cursor-pointer max-h-48 overflow-y-auto">
+                            </select>
+                            <div class="flex-1 border border-slate-300 rounded-md px-3 py-2 text-sm text-slate-600 bg-slate-50 flex items-center">
+                                Days
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 border border-primary text-primary font-medium rounded-md hover:bg-blue-50 transition-colors flex items-center gap-1">
+                            <i class="fas fa-chevron-left text-xs"></i> Back
+                        </button>
+                        <button type="submit" class="px-6 py-2 bg-primary text-white font-medium rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
+                            <i class="far fa-paper-plane text-sm"></i> Check Clinic Availability
+                        </button>
+                    </div>
+                </form>
+
+                <div id="resultsSection" class="hidden mt-8 border-t border-slate-200 pt-6">
+                    <h4 class="font-bold text-slate-800 mb-4">Select a Clinic to Reschedule</h4>
+                    
+                    <div id="dynamicLabContainer" class="space-y-4 mb-6 max-h-[45vh] overflow-y-auto pr-2 modal-scroll pb-2">
+                        <!-- Lab cards injected via JS -->
+                    </div>
+                    
+                    <div class="flex justify-end border-t border-slate-200 pt-4">
+                        <button onclick="triggerConfirmationFromAvailability()" class="px-6 py-2 bg-primary text-white font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
+                            <i class="fas fa-download"></i> Confirm & Download Pass
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store the active lab selection globally to allow re-downloads
+        window.currentLabData = null;
+
+        function getFutureDate(daysToAdd) {
+            const date = new Date();
+            date.setDate(date.getDate() + parseInt(daysToAdd));
+            return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: '2-digit' });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const populateDropdowns = (idList, start, end, step, defaultVal, suffix = "") => {
+                idList.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(!el) return;
+                    for(let i = start; i <= end; i += step) {
+                        el.add(new Option(i + suffix, i));
+                    }
+                    el.value = defaultVal;
+                });
+            };
+
+            // Radius selects (Both old modal and new Schedule Flow)
+            populateDropdowns(['radiusSelect', 'schedRadiusSelect'], 5, 100, 5, 50);
+            
+            // Duration selects (Including new Schedule Flow)
+            populateDropdowns(['durationSelect', 'onlyDurationSelect', 'schedDurationSelect'], 1, 90, 1, 3, " days");
+        });
+
+        // Dropdown Menu Logic (Top Right)
+        function toggleActionMenu() {
+            document.getElementById('actionDropdownMenu').classList.toggle('hidden');
+        }
+        function closeActionMenu() {
+            document.getElementById('actionDropdownMenu').classList.add('hidden');
+        }
+
+        // ------------------------------------
+        // NEW FLOW LOGIC: Modify Order -> Schedule
+        // ------------------------------------
+        function openModifyOrderFlow() {
+            document.getElementById('modifyOrderOverlay').classList.remove('hidden');
+            document.getElementById('modifyOrderOverlay').classList.add('flex');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function openScheduleFlowDirectly(contextText) {
+            if(contextText) {
+                document.getElementById('scheduleFlowContextText').innerText = contextText;
+            }
+            document.getElementById('scheduleFlowOverlay').classList.remove('hidden');
+            document.getElementById('scheduleFlowOverlay').classList.add('flex');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeModifyOrderFlow() {
+            document.getElementById('modifyOrderOverlay').classList.add('hidden');
+            document.getElementById('modifyOrderOverlay').classList.remove('flex');
+            document.getElementById('scheduleFlowOverlay').classList.add('hidden');
+            document.getElementById('scheduleFlowOverlay').classList.remove('flex');
+            document.body.style.overflow = 'auto'; 
+        }
+
+        function goToScheduleStep() {
+            document.getElementById('modifyOrderOverlay').classList.add('hidden');
+            document.getElementById('scheduleFlowContextText').innerText = 'All Health Screening Checks';
+            document.getElementById('scheduleFlowOverlay').classList.remove('hidden');
+            document.getElementById('scheduleFlowOverlay').classList.add('flex');
+        }
+
+        function toggleScheduleClinicDropdown() {
+            document.getElementById('scheduleClinicDropdown').classList.toggle('hidden');
+        }
+
+        function updateDropdownText(dropdownId, textElementId) {
+            const dropdown = document.getElementById(dropdownId);
+            const textElement = document.getElementById(textElementId);
+            const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]:checked');
+
+            if (checkboxes.length === 0) {
+                textElement.textContent = "Select Preferences...";
+                textElement.classList.add('text-slate-400');
+                textElement.classList.remove('text-slate-700', 'text-slate-600');
+            } else {
+                const selectedValues = Array.from(checkboxes).map(cb => cb.value).join(', ');
+                textElement.textContent = selectedValues;
+                textElement.classList.remove('text-slate-400');
+                textElement.classList.add('text-slate-700');
+            }
+        }
+
+        function handleScheduleSearch(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i> Searching...';
+            btn.disabled = true;
+
+            const zipCode = document.getElementById('schedZipInput').value;
+
+            setTimeout(() => {
+                generateDynamicLabs(zipCode, 'scheduleFlowDynamicLabContainer', 'newFlow_lab_selection');
+                document.getElementById('scheduleFlowResultsSection').classList.remove('hidden');
+                btn.innerHTML = 'Search';
+                btn.disabled = false;
+                document.getElementById('scheduleFlowResultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 800);
+        }
+
+        // ------------------------------------
+        // CENTRALIZED CONFIRMATION LOGIC
+        // ------------------------------------
+        let pendingLabSelection = null;
+        let pendingDurationId = null;
+        let pendingFlowOrigin = null;
+
+        function closeConfirmModal() { 
+            document.getElementById('confirmChangeModal').classList.add('hidden'); 
+            // Re-enable scrolling if we are cancelling the schedule flow
+            if(pendingFlowOrigin === 'schedule' && document.getElementById('scheduleFlowOverlay').classList.contains('hidden')) {
+                 document.body.style.overflow = 'auto'; 
+            }
+        }
+
+        function triggerConfirmationFromSchedule() {
+            const selectedRadio = document.querySelector('input[name="newFlow_lab_selection"]:checked');
+            if(!selectedRadio) {
+                alert("Please select a clinic.");
+                return;
+            }
+            pendingLabSelection = selectedRadio;
+            pendingDurationId = 'schedDurationSelect';
+            pendingFlowOrigin = 'schedule';
+            document.getElementById('confirmChangeModal').classList.remove('hidden');
+        }
+
+        function triggerConfirmationFromAvailability() {
+            const selectedRadio = document.querySelector('input[name="lab_selection"]:checked');
+            if(!selectedRadio) {
+                alert("Please select a clinic.");
+                return;
+            }
+            pendingLabSelection = selectedRadio;
+            pendingDurationId = 'durationSelect';
+            pendingFlowOrigin = 'availability';
+            document.getElementById('confirmChangeModal').classList.remove('hidden');
+        }
+
+        function executeConfirmedChange() {
+            closeConfirmModal();
+            if(pendingLabSelection) {
+                finalizeLabSelection(pendingLabSelection, pendingDurationId);
+                
+                // Close appropriate source modals
+                if(pendingFlowOrigin === 'availability') {
+                    closeModal();
+                } else if (pendingFlowOrigin === 'schedule') {
+                    closeModifyOrderFlow();
+                }
+                
+                pendingLabSelection = null;
+                pendingFlowOrigin = null;
+            }
+        }
+
+
+        // ------------------------------------
+        // EXISTING LOGIC (Modals, Dashboard)
+        // ------------------------------------
+        function toggleCheckDetails(id, headerElement) {
+            const detailsDiv = document.getElementById(id);
+            const icon = headerElement.querySelector('i');
+            if (detailsDiv.classList.contains('hidden')) {
+                detailsDiv.classList.remove('hidden');
+                icon.classList.add('rotate-180'); 
+            } else {
+                detailsDiv.classList.add('hidden');
+                icon.classList.remove('rotate-180'); 
+            }
+        }
+
+        let isExpandedAll = false;
+        function toggleAllChecks() {
+            isExpandedAll = !isExpandedAll;
+            const toggleBg = document.getElementById('expandAllToggle');
+            const toggleKnob = document.getElementById('expandAllKnob');
+            const toggleText = document.getElementById('expandAllText');
+
+            if (isExpandedAll) {
+                toggleBg.classList.replace('bg-slate-300', 'bg-primary');
+                toggleKnob.classList.add('translate-x-4');
+                toggleText.innerText = "Collapse All";
+                document.querySelectorAll('.check-detail-section').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('.check-chevron').forEach(el => el.classList.add('rotate-180'));
+            } else {
+                toggleBg.classList.replace('bg-primary', 'bg-slate-300');
+                toggleKnob.classList.remove('translate-x-4');
+                toggleText.innerText = "Expand All";
+                document.querySelectorAll('.check-detail-section').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.check-chevron').forEach(el => el.classList.remove('rotate-180'));
+            }
+        }
+
+        function toggleDropdown(id) { document.getElementById(id).classList.toggle('hidden'); }
+
+        document.addEventListener('click', function(event) {
+            // Close Action Dropdown
+            const actionDropdown = document.getElementById('actionDropdownMenu');
+            const actionBtn = document.getElementById('actionMenuBtn');
+            if (actionDropdown && !actionDropdown.contains(event.target) && !actionBtn.contains(event.target)) {
+                actionDropdown.classList.add('hidden');
+            }
+
+            // Close Custom Select Dropdowns
+            ['clinicDropdown', 'scheduleClinicDropdown'].forEach(id => {
+                const dropdown = document.getElementById(id);
+                const button = dropdown?.previousElementSibling;
+                if (dropdown && button && !button.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        });
+
+        function closeModal() { document.getElementById('availabilityModal').classList.add('hidden'); }
+
+        function openAvailabilityModal(contextText) {
+            if(contextText) {
+                document.getElementById('availabilityChecksList').innerText = contextText;
+            }
+            document.getElementById('availabilityModal').classList.remove('hidden');
+            document.getElementById('resultsSection').classList.add('hidden'); 
+        }
+
+        function openDurationModal() { 
+            const labName = document.getElementById('confLabName');
+            const currentExp = document.getElementById('dueDateDisplay');
+            
+            if (labName && currentExp && !document.getElementById('confirmedOrderDetails').classList.contains('hidden')) {
+                document.getElementById('durationModalLabName').innerText = labName.innerText;
+                document.getElementById('durationModalDateDisplay').innerText = currentExp.innerText;
+            } else {
+                document.getElementById('durationModalLabName').innerText = "Pending Clinic Selection...";
+                document.getElementById('durationModalDateDisplay').innerText = "N/A";
+            }
+            document.getElementById('durationModal').classList.remove('hidden'); 
+        }
+        
+        function closeDurationModal() { document.getElementById('durationModal').classList.add('hidden'); }
+
+        function confirmDurationChange() {
+            const selectedPass = document.querySelector('input[name="pass_to_modify"]:checked');
+            if(!selectedPass) {
+                alert("Please select a pass to modify.");
+                return;
+            }
+
+            const days = document.getElementById('onlyDurationSelect').value;
+            const newDate = getFutureDate(days);
+            
+            if (selectedPass.value === 'pass1') {
+                document.getElementById('dueDateDisplay').innerText = newDate;
+            }
+            
+            alert("Success! Your pass duration has been extended to " + newDate + ". A new pass has been issued.");
+            closeDurationModal();
+        }
+
+        function handleSearch(e) {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-sm"></i> Searching...';
+            btn.disabled = true;
+
+            const zipCode = document.getElementById('zipcodeInput').value;
+
+            setTimeout(() => {
+                generateDynamicLabs(zipCode, 'dynamicLabContainer', 'lab_selection');
+                document.getElementById('resultsSection').classList.remove('hidden');
+                btn.innerHTML = '<i class="far fa-paper-plane text-sm"></i> Check Clinic Availability';
+                btn.disabled = false;
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            }, 800);
+        }
+
+        function generateLabCard(id, radioName, company, name, address, phone, distance, cost, timings, isChecked = false) {
+            let timingsHTML = '';
+            timings.forEach((t, idx) => {
+                const borderClass = idx > 0 ? 'border-l border-slate-300 pl-3' : '';
+                timingsHTML += `<div class="${borderClass}"><div class="text-slate-500">${t.days}</div><div class="font-medium">${t.time}</div></div>`;
+            });
+
+            return `
+                <label class="block border border-slate-300 rounded-lg p-4 cursor-pointer hover:border-blue-400 hover:shadow-md transition-all bg-white has-[:checked]:border-blue-500 has-[:checked]:ring-1 has-[:checked]:ring-blue-500 relative text-left">
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="flex items-center gap-2">
+                            <input type="radio" name="${radioName}" class="cursor-pointer" ${isChecked ? 'checked' : ''} value="${id}"
+                                data-company="${company}"
+                                data-name="${name}"
+                                data-address="${address}"
+                                data-phone="${phone}"
+                                data-distance="${distance}"
+                                data-timings='${JSON.stringify(timings)}'>
+                            <span class="font-bold text-slate-800 text-sm">${company}</span>
+                        </div>
+                        <div class="flex items-center gap-1 text-xs text-slate-500 italic font-medium bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">
+                            ${distance} miles <i class="fas fa-arrow-trend-up"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="font-bold text-slate-800 text-sm mb-3 pl-6">${name}</div>
+                    
+                    <div class="text-[11px] sm:text-xs text-slate-600 space-y-2 pl-6">
+                        <div class="flex gap-2 items-start">
+                            <i class="fas fa-building text-slate-400 mt-0.5 w-3 text-center"></i> 
+                            <span class="uppercase">${address.replace('|', ', ')}</span>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <i class="fas fa-phone-alt text-slate-400 w-3 text-center"></i> 
+                            <span>${phone}</span>
+                        </div>
+                        <div class="flex gap-2 items-start pt-1">
+                            <i class="far fa-clock text-slate-400 mt-0.5 w-3 text-center"></i>
+                            <div class="flex flex-wrap gap-x-3 gap-y-2 w-full">
+                                ${timingsHTML}
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            `;
+        }
+
+        // Adapted to accept containerId and radioName to serve both search flows
+        function generateDynamicLabs(zipCode, containerId, radioName) {
+            const container = document.getElementById(containerId);
+            let html = '';
+
+            html += generateLabCard("lab1", radioName, "Escreen", "IMA - Manhattan", `42 BROADWAY|NEW YORK, NY ${zipCode}`, `(212) 363-2650`, "3.00", "$69.00", [
+                { days: "Mon - Fri", time: "08:30 - 16:30" }, { days: "Sat - Sun", time: "00:00 - 00:00" }
+            ], true);
+
+            html += generateLabCard("lab2", radioName, "Labcorp", "Labcorp Brooklyn Center", `186 JORALEMON ST 5TH FL|BROOKLYN, NY 11201`, `(718) 237-4572`, "3.20", "$7.27", [
+                { days: "Mon - Fri", time: "09:00 - 17:00" }, { days: "Sat", time: "10:00 - 15:00" }, { days: "Sun", time: "Closed" }
+            ]);
+
+            html += generateLabCard("lab3", radioName, "Escreen", "Urgent Care Clinic NY", `150 MAIN STREET|NEW YORK, NY 10002`, `(212) 555-1234`, "4.15", "$65.00", [
+                { days: "Mon - Sun", time: "09:00 - 17:00" }
+            ]);
+
+            container.innerHTML = html;
+        }
+
+        // Extracted shared logic to update main dashboard state
+        function finalizeLabSelection(selectedRadio, durationElementId) {
+            const labData = {
+                company: selectedRadio.dataset.company,
+                name: selectedRadio.dataset.name,
+                address: selectedRadio.dataset.address, 
+                phone: selectedRadio.dataset.phone,
+                distance: selectedRadio.dataset.distance,
+                timings: JSON.parse(selectedRadio.dataset.timings)
+            };
+
+            window.currentLabData = labData;
+            generatePDF(labData);
+            
+            document.getElementById('initialOrderDetails').classList.add('hidden');
+            document.getElementById('confirmedOrderDetails').classList.remove('hidden');
+
+            for(let i=1; i<=4; i++) {
+                const badge = document.getElementById('statusBadge' + i);
+                if(badge) {
+                    badge.innerText = "In Progress";
+                    badge.classList.replace("bg-attention", "bg-primary");
+                }
+            }
+            
+            const days = document.getElementById(durationElementId).value;
+            document.getElementById('dueDateDisplay').innerText = getFutureDate(days);
+
+            document.getElementById('confLabCompany').innerText = labData.company;
+            document.getElementById('confLabName').innerText = labData.name;
+            const formattedAddr = labData.address.replace('|', '<br>');
+            document.getElementById('confLabAddress').innerHTML = formattedAddr;
+            document.getElementById('confLabPhone').innerText = labData.phone;
+            document.getElementById('confLabDistance').innerText = labData.distance + " miles";
+
+            let timingsHTML = '';
+            labData.timings.forEach(t => {
+                timingsHTML += `<tr><td class="text-right pr-3 text-slate-500 font-medium whitespace-nowrap align-top">${t.days}</td><td class="whitespace-nowrap pb-1">${t.time}</td></tr>`;
+            });
+            document.getElementById('confLabTimings').innerHTML = timingsHTML;
+
+            document.getElementById('orderDetailsWrapper').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadExistingPass() {
+            if(!window.currentLabData) return;
+            generatePDF(window.currentLabData);
+        }
+
+        function generatePDF(labData) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(18);
+            doc.setTextColor(30, 64, 175); 
+            doc.text("CRL | FormFox Marketplace", 20, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(220, 38, 38); 
+            const dueDateText = document.getElementById('dueDateDisplay').innerText;
+            doc.text(`PLEASE COMPLETE BY 4:10 AM on ${dueDateText}`, 50, 30);
+
+            doc.setFillColor(100, 116, 139); 
+            doc.rect(20, 35, 170, 8, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.text("DONOR INFORMATION", 22, 41);
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "normal");
+            doc.text("Name: JAKE PAUL", 20, 50); 
+            doc.text("EmpID: *****MKZB", 20, 55);
+            
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(220, 38, 38);
+            doc.text("YOUR SITE IS:", 20, 65);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(0, 0, 0);
+            
+            const addressParts = labData.address.split('|');
+            doc.text(`${labData.company} - ${labData.name}\n${addressParts[0]}\n${addressParts[1] || ''}\n${labData.phone}`, 20, 70);
+
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(220, 38, 38);
+            doc.text("INSTRUCTIONS:", 20, 95);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(0, 0, 0);
+            doc.text("• CALL the site to confirm hours and if an appointment is needed.\n• BRING THIS FORM and a VALID PHOTO ID to the site.\n• Appointment Required for Clinical Specimen Collection.", 20, 100);
+
+            doc.setFillColor(100, 116, 139); 
+            doc.rect(20, 120, 170, 8, "F");
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.text("CLINIC INFORMATION", 22, 126);
+
+            doc.setFillColor(254, 243, 199); 
+            doc.rect(20, 128, 170, 75, "F"); 
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "bold");
+            doc.text("SERVICES TO PROVIDE:", 22, 138);
+            
+            doc.setFont("helvetica", "normal");
+            doc.text("• 5 Panel Drug", 22, 145);
+            doc.text("• Hep B Surface Antibody (HBsAb) Titer", 22, 151);
+            doc.text("• MMR Titer", 22, 157);
+            doc.text("• Varicella Titer", 22, 163);
+            doc.text("• Hepatitis-B Vaccine", 22, 169);
+            doc.text("• Basic Physical", 22, 175);
+
+            doc.setFont("helvetica", "bold");
+            doc.text("ORGANIZATION OR EMPLOYER:", 22, 188);
+            doc.setFont("helvetica", "normal");
+            doc.text("Bluetest Client\nPink road, near JSPM college...", 22, 193);
+
+            doc.save("Jake_Paul_Donor_Pass.pdf");
+        }
+    </script>
+</body>
+</html>
