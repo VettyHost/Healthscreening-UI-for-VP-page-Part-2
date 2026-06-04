@@ -45,7 +45,7 @@
     <!-- Main Dashboard Card -->
     <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         
-        <!-- Header Section (Added mb-10 for extra spacing) -->
+        <!-- Header Section -->
         <div class="flex justify-between items-start mb-10">
             <h2 class="text-xl font-bold text-slate-900">Health Screening Checks</h2>
             <div class="flex flex-col items-end gap-2 text-sm">
@@ -500,8 +500,9 @@
                 </div>
                 
                 <div class="flex justify-end border-t border-slate-200 pt-4">
-                    <button onclick="triggerConfirmationFromSchedule()" class="px-6 py-2.5 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2 text-sm uppercase">
-                        Download Donor Pass / ePassport <i class="fas fa-download ml-1"></i>
+                    <!-- Updated to Next -->
+                    <button onclick="triggerConfirmationFromSchedule()" class="px-8 py-2.5 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2 text-sm uppercase">
+                        Next
                     </button>
                 </div>
             </div>
@@ -594,7 +595,7 @@
     <div id="availabilityModal" class="fixed inset-0 bg-slate-900 bg-opacity-50 hidden flex items-center justify-center z-50">
         <div class="bg-white w-full max-w-3xl rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             <div class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-                <h3 class="text-md sm:text-lg font-bold text-slate-800 truncate">Check Clinic Availability & Generate New Donor Pass</h3>
+                <h3 class="text-md sm:text-lg font-bold text-slate-800 truncate">Check Clinic Availability & Reschedule & Generate New Donor Pass</h3>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 ml-4 flex-shrink-0">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -688,8 +689,9 @@
                     </div>
                     
                     <div class="flex justify-end border-t border-slate-200 pt-4">
-                        <button onclick="triggerConfirmationFromAvailability()" class="px-6 py-2 bg-primary text-white font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
-                            <i class="fas fa-download"></i> Next
+                        <!-- Updated to Next -->
+                        <button onclick="triggerConfirmationFromAvailability()" class="px-8 py-2 bg-primary text-white font-bold rounded-md hover:bg-blue-700 transition-colors shadow-sm text-sm uppercase">
+                            Next
                         </button>
                     </div>
                 </div>
@@ -701,6 +703,11 @@
     <script>
         // Store the active lab selection globally to allow re-downloads
         window.currentLabData = null;
+
+        // Variables for confirmation flow
+        let pendingLabSelection = null;
+        let pendingDurationId = null;
+        let pendingFlowOrigin = null;
 
         function getFutureDate(daysToAdd) {
             const date = new Date();
@@ -809,10 +816,6 @@
         // ------------------------------------
         // CENTRALIZED CONFIRMATION LOGIC
         // ------------------------------------
-        let pendingLabSelection = null;
-        let pendingDurationId = null;
-        let pendingFlowOrigin = null;
-
         function closeConfirmModal() { 
             document.getElementById('confirmChangeModal').classList.add('hidden'); 
             // Re-enable scrolling if we are cancelling the schedule flow
@@ -861,7 +864,6 @@
                 pendingFlowOrigin = null;
             }
         }
-
 
         // ------------------------------------
         // EXISTING LOGIC (Modals, Dashboard)
